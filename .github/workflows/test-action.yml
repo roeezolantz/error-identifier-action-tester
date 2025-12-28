@@ -98,6 +98,9 @@ jobs:
   test-npm-mode:
     runs-on: ubuntu-latest
     name: Test NPM Publishing (Live)
+    permissions:
+      contents: read
+      id-token: write  # Required for NPM Provenance (Trusted Publishing)
     steps:
       - uses: actions/checkout@v3
 
@@ -111,7 +114,7 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
 
-      # LIVE NPM PUBLISHING - This will actually publish to npmjs.com!
+      # LIVE NPM PUBLISHING - Using Trusted Publishing (no token needed!)
       - name: Extract errors and publish to NPM
         uses: roeezolantz/solidity-error-identifier-action@master
         with:
@@ -121,13 +124,16 @@ jobs:
           publish-npm: 'true'
           npm-package-name: '@roeezolantz/test-contract-errors'
           npm-binary-name: 'test-error-lookup'
-          npm-token: ${{ secrets.NPM_TOKEN }}
+          npm-provenance: 'true'  # Use Trusted Publishing via OIDC
 
       - name: Show published package info
         run: |
-          echo "📦 Successfully published to NPM!"
+          echo "📦 Successfully published to NPM using Trusted Publishing!"
           echo "Package: @roeezolantz/test-contract-errors"
           echo "Binary: test-error-lookup"
+          echo ""
+          echo "✨ Published with provenance - verify at:"
+          echo "   https://www.npmjs.com/package/@roeezolantz/test-contract-errors"
           echo ""
           echo "Error database contents:"
           cat errors.json | jq '.'
