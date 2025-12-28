@@ -114,7 +114,7 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
 
-      # LIVE NPM PUBLISHING - Using Trusted Publishing (no token needed!)
+      # LIVE NPM PUBLISHING - Using token + provenance for secure publishing
       - name: Extract errors and publish to NPM
         uses: roeezolantz/solidity-error-identifier-action@master
         with:
@@ -124,22 +124,24 @@ jobs:
           publish-npm: 'true'
           npm-package-name: '@roeezolantz/test-contract-errors'
           npm-binary-name: 'test-error-lookup'
-          npm-provenance: 'true'  # Use Trusted Publishing via OIDC
+          npm-token: ${{ secrets.NPM_TOKEN }}  # Authentication (use automation token)
+          npm-provenance: 'true'  # Add cryptographic provenance attestation
 
       - name: Show published package info
         run: |
-          echo "📦 Successfully published to NPM using Trusted Publishing!"
+          echo "📦 Successfully published to NPM with provenance!"
           echo "Package: @roeezolantz/test-contract-errors"
           echo "Binary: test-error-lookup"
           echo ""
-          echo "✨ Published with provenance - verify at:"
-          echo "   https://www.npmjs.com/package/@roeezolantz/test-contract-errors"
+          echo "✨ Published with cryptographic provenance attestation"
+          echo "   This proves the package was built by this GitHub Actions workflow"
+          echo "   Verify provenance at: https://www.npmjs.com/package/@roeezolantz/test-contract-errors"
           echo ""
           echo "Error database contents:"
           cat errors.json | jq '.'
           echo ""
-          echo "To use: npm install -g @roeezolantz/test-contract-errors"
-          echo "Then run: test-error-lookup <error-selector>"
+          echo "To install: npm install -g @roeezolantz/test-contract-errors"
+          echo "To use: test-error-lookup <error-selector>"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
