@@ -26,7 +26,7 @@ jobs:
         run: npx hardhat compile
 
       - name: Extract errors (ABI mode)
-        uses: roee-zolantz/solidity-error-identifier-action@main  # Use local action for testing
+        uses: roee-zolantz/solidity-error-identifier-action@master
         with:
           mode: 'abi'
           abi-paths: 'artifacts/contracts'
@@ -52,7 +52,7 @@ jobs:
           echo "✅ Error count looks good: $ERROR_COUNT errors"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: errors-abi-mode
           path: errors-abi-mode.json
@@ -71,7 +71,7 @@ jobs:
       # NO compilation step - action does it!
 
       - name: Extract errors (Compile mode)
-        uses: roee-zolantz/solidity-error-identifier-action@main
+        uses: roee-zolantz/solidity-error-identifier-action@master
         with:
           mode: 'compile'
           contract-paths: 'contracts'
@@ -89,7 +89,7 @@ jobs:
           cat errors-compile-mode.json | jq '.'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: errors-compile-mode
           path: errors-compile-mode.json
@@ -114,7 +114,7 @@ jobs:
       # For testing without publishing, we'll just extract
       # In production, you'd add: publish-npm: 'true'
       - name: Extract errors (would publish to npm)
-        uses: roee-zolantz/solidity-error-identifier-action@main
+        uses: roee-zolantz/solidity-error-identifier-action@master
         with:
           mode: 'abi'
           abi-paths: 'artifacts/contracts'
@@ -130,7 +130,7 @@ jobs:
           cat errors.json | jq '.'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: errors-npm-mode
           path: errors.json
