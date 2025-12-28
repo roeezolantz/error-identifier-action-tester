@@ -94,10 +94,10 @@ jobs:
           name: errors-compile-mode
           path: errors-compile-mode.json
 
-  # Test 3: NPM Publishing Mode (dry run - no actual publish)
+  # Test 3: NPM Publishing Mode (LIVE - actually publishes to NPM!)
   test-npm-mode:
     runs-on: ubuntu-latest
-    name: Test NPM Mode (Dry Run)
+    name: Test NPM Publishing (Live)
     steps:
       - uses: actions/checkout@v3
 
@@ -111,23 +111,29 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
 
-      # For testing without publishing, we'll just extract
-      # In production, you'd add: publish-npm: 'true'
-      - name: Extract errors (would publish to npm)
+      # LIVE NPM PUBLISHING - This will actually publish to npmjs.com!
+      - name: Extract errors and publish to NPM
         uses: roeezolantz/solidity-error-identifier-action@master
         with:
           mode: 'abi'
           abi-paths: 'artifacts/contracts'
           output-path: 'errors.json'
-          # publish-npm: 'true'  # Uncomment to actually publish
-          # npm-package-name: '@yourorg/test-errors'
-          # npm-binary-name: 'test-error-lookup'
-          # npm-token: ${{ secrets.NPM_TOKEN }}
+          publish-npm: 'true'
+          npm-package-name: '@roeezolantz/test-contract-errors'
+          npm-binary-name: 'test-error-lookup'
+          npm-token: ${{ secrets.NPM_TOKEN }}
 
-      - name: Show what would be published
+      - name: Show published package info
         run: |
-          echo "📦 Would publish as npm package with this data:"
+          echo "📦 Successfully published to NPM!"
+          echo "Package: @roeezolantz/test-contract-errors"
+          echo "Binary: test-error-lookup"
+          echo ""
+          echo "Error database contents:"
           cat errors.json | jq '.'
+          echo ""
+          echo "To use: npm install -g @roeezolantz/test-contract-errors"
+          echo "Then run: test-error-lookup <error-selector>"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
