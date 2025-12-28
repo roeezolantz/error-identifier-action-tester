@@ -1,0 +1,12 @@
+{
+  "name": "solidity-error-test-repo",
+  "version": "1.0.0",
+  "description": "Test repository for solidity-error-identifier-action",
+  "scripts": {
+    "compile": "hardhat compile"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}

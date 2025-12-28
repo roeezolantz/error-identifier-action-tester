@@ -1,0 +1,136 @@
+name: Test Error Identifier Action
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  # Test 1: ABI Mode (compile first, then extract)
+  test-abi-mode:
+    runs-on: ubuntu-latest
+    name: Test ABI Mode
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      - name: Extract errors (ABI mode)
+        uses: roee-zolantz/solidity-error-identifier-action@main  # Use local action for testing
+        with:
+          mode: 'abi'
+          abi-paths: 'artifacts/contracts'
+          output-path: 'errors-abi-mode.json'
+
+      - name: Verify errors.json was created
+        run: |
+          if [ ! -f "errors-abi-mode.json" ]; then
+            echo "❌ Error: errors-abi-mode.json not created!"
+            exit 1
+          fi
+          echo "✅ errors-abi-mode.json created successfully"
+          cat errors-abi-mode.json | jq '.'
+
+      - name: Check error count
+        run: |
+          ERROR_COUNT=$(cat errors-abi-mode.json | jq 'length')
+          echo "Found $ERROR_COUNT errors"
+          if [ "$ERROR_COUNT" -lt 5 ]; then
+            echo "❌ Expected at least 5 errors, got $ERROR_COUNT"
+            exit 1
+          fi
+          echo "✅ Error count looks good: $ERROR_COUNT errors"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: errors-abi-mode
+          path: errors-abi-mode.json
+
+  # Test 2: Compile Mode (action compiles for us)
+  test-compile-mode:
+    runs-on: ubuntu-latest
+    name: Test Compile Mode
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      # NO compilation step - action does it!
+
+      - name: Extract errors (Compile mode)
+        uses: roee-zolantz/solidity-error-identifier-action@main
+        with:
+          mode: 'compile'
+          contract-paths: 'contracts'
+          compiler: 'hardhat'
+          solidity-version: '0.8.25'
+          output-path: 'errors-compile-mode.json'
+
+      - name: Verify errors.json was created
+        run: |
+          if [ ! -f "errors-compile-mode.json" ]; then
+            echo "❌ Error: errors-compile-mode.json not created!"
+            exit 1
+          fi
+          echo "✅ errors-compile-mode.json created successfully"
+          cat errors-compile-mode.json | jq '.'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: errors-compile-mode
+          path: errors-compile-mode.json
+
+  # Test 3: NPM Publishing Mode (dry run - no actual publish)
+  test-npm-mode:
+    runs-on: ubuntu-latest
+    name: Test NPM Mode (Dry Run)
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      # For testing without publishing, we'll just extract
+      # In production, you'd add: publish-npm: 'true'
+      - name: Extract errors (would publish to npm)
+        uses: roee-zolantz/solidity-error-identifier-action@main
+        with:
+          mode: 'abi'
+          abi-paths: 'artifacts/contracts'
+          output-path: 'errors.json'
+          # publish-npm: 'true'  # Uncomment to actually publish
+          # npm-package-name: '@yourorg/test-errors'
+          # npm-binary-name: 'test-error-lookup'
+          # npm-token: ${{ secrets.NPM_TOKEN }}
+
+      - name: Show what would be published
+        run: |
+          echo "📦 Would publish as npm package with this data:"
+          cat errors.json | jq '.'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: errors-npm-mode
+          path: errors.json
